@@ -1,69 +1,109 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Toaster } from 'react-hot-toast';
-import { SearchBar } from './component/SearchBar/SearchBar';
-import { ImageGallery } from './component/ImageGallery/ImageGallery';
-import { Loader } from './component/Loader/Loader';
-import { ErrorMessage } from './component/ErrorMessage/ErrorMassage';
-import { LoadMoreBtn } from './component/LoadMoreBtn/LoadMoreBtn';
-import { ImageModal } from './component/ImageModal/ImageModal';
 
-const ACCESS_KEY = 'q3a1Fu1VMZeCsJt0wKIOJdFY-TEY1c_9oYIAuIwC9G8';
-const BASE_URL = 'https://api.unsplash.com/search/photos';
+import './App.css';
+import fetchGalleryPhotos from './api/photos-api';
 
-const fetchImages = async (query, page = 1) => {
-  const response = await fetch(
-    `${BASE_URL}?query=${query}&page=${page}&per_page=12&client_id=${ACCESS_KEY}`
-  );
-  if (!response.ok) throw new Error('Failed to fetch images');
-  return await response.json();
-};
+import SearchBar from './component/SearchBar/SearchBar';
+import ImageGallery from './component/ImageGallery/ImageGallery';
+import Loader from './component/Loader/Loader';
+import ErrorMessage from './component/ErrorMessage/ErrorMassage';
+import LoadMoreBtn from './component/LoadMoreBtn/LoadMoreBtn';
+import ImageModal from './component/ImageModal/ImageModal';
 
-export default function App() {
-  const [images, setImages] = useState([]);
-  const [query, setQuery] = useState('');
-  const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [modalIsOpen, setModalIsOpen] = useState(false);
-  const [modalImage, setModalImage] = useState(null);
+function App() {
+	const [page, setPage] = useState(1);
+	const [queryValue, setQueryValue] = useState('');
+	const [gallery, setGallery] = useState([]);
+	const [isLoading, setIsLoading] = useState(false);
+	const [isError, setIsError] = useState(false);
+	const [totalPages, setTotalPages] = useState(0);
 
-  useEffect(() => {
-    if (!query) return;
-    setLoading(true);
-    fetchImages(query, page)
-      .then((data) => {
-        setImages((prev) => [...prev, ...data.results]);
-        setError(null);
-      })
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, [query, page]);
+	const [modalIsOpen, setIsOpen] = useState(false);
+	const [modalImage, setModalImage] = useState('');
+	const [altDescription, setAltDescription] = useState('');
 
-  const handleSearch = (newQuery) => {
-    if (newQuery === query) return;
-    setQuery(newQuery);
-    setImages([]);
-    setPage(1);
-  };
+	const ref = useRef();
 
-  const handleLoadMore = () => setPage((prev) => prev + 1);
+	useEffect(() => {
+		if (queryValue === '') return;
 
-  const handleImageClick = (url) => {
-    setModalImage(url);
-    setModalIsOpen(true);
-  };
+		const handleSearch = async () => {
+			try {
+				setIsLoading(true);
+				setIsError(false);
+				const data = await fetchGalleryPhotos(queryValue, page);
+				console.log('data: ', data);
+				if (data.total === 0) return;
+				setGallery((prevGallery) => {
+					return [...prevGallery, ...data.results];
+				});
+				setTotalPages(data.total_pages);
+			} catch (error) {
+			console.error('Помилка при завантаженні фото:', error);
+			setIsError(true);
+            } finally {
+				setIsLoading(false);
+			}
+		};
+		handleSearch();
+	}, [page, queryValue]);
 
-  const closeModal = () => setModalIsOpen(false);
+	useEffect(() => {
+		if (page === 1) return;
 
-  return (
-    <div>
-      <SearchBar onSubmit={handleSearch} />
-      {error && <ErrorMessage message={error} />}
-      <ImageGallery  images={images}  onImageClick={handleImageClick} />
-      {loading && <Loader />}
-      {images.length > 0 && !loading && <LoadMoreBtn onClick={handleLoadMore} />}
-      <ImageModal isOpen={modalIsOpen} onClose={closeModal} imageUrl={modalImage} />
-      <Toaster position="top-right" />
-    </div>
-  );
+		ref.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+	}, [page, gallery]);
+
+	const handleQuery = (newQuery) => {
+		setQueryValue(newQuery);
+		setGallery([]);
+		setPage(1);
+	};
+
+	const handleLoadMore = () => {
+		setPage(page + 1);
+	};
+
+	const isActive = useMemo(() => page === totalPages, [page, totalPages]);
+
+	const openModal = () => {
+		setIsOpen(true);
+	};
+
+	const closeModal = () => {
+		setIsOpen(false);
+	};
+
+	const updateModalStateData = (src, alt) => {
+		setModalImage(src);
+		setAltDescription(alt);
+	};
+
+	return (
+		<div ref={ref}>
+			<SearchBar onSubmit={handleQuery} />
+			{gallery.length > 0 && (
+				<ImageGallery
+					gallery={gallery}
+					openModal={openModal}
+					updateModalStateData={updateModalStateData}
+				/>
+			)}
+			{isLoading && <Loader />}
+			{isError && <ErrorMessage />}
+			{gallery.length > 0 && !isLoading && !isError && (
+				<LoadMoreBtn handleLoadMore={handleLoadMore} isActive={isActive} />
+			)}
+			<ImageModal
+				modalIsOpen={modalIsOpen}
+				closeModal={closeModal}
+				src={modalImage}
+				alt={altDescription}
+			/>
+			<Toaster position='top-right' reverseOrder={true} />
+		</div>
+	);
 }
+
+export default App;

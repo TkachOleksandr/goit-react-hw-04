@@ -1,12 +1,15 @@
-import styled from 'styled-components';
+import { BiSolidErrorAlt } from 'react-icons/bi';
+import styles from './ErrorMessage.module.css';
 
-const Message = styled.p`
-  text-align: center;
-  color: red;
-  font-size: 18px;
-  margin-top: 20px;
-`;
-
-export const ErrorMessage = ({ message }) => {
-  return <Message>{message}</Message>;
+const ErrorMessage = () => {
+	return (
+		<div className={styles.errorContainer}>
+			<BiSolidErrorAlt className={styles.errorIcon} />
+			<p className={styles.errorText}>
+				Something went wrong, please reload you page!
+			</p>
+		</div>
+	);
 };
+
+export default ErrorMessage;

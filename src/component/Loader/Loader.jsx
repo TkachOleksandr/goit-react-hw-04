@@ -1,14 +1,21 @@
-import { DotLoader } from 'react-spinners';
-import styled from 'styled-components';
+import { ThreeDots } from 'react-loader-spinner';
+import styles from './Loader.module.css';
 
-const LoaderWrapper = styled.div`
-  display: flex;
-  justify-content: center;
-  margin: 20px 0;
-`;
+const Loader = () => {
+	return (
+		<div className={styles.loader}>
+			<ThreeDots
+				visible={true}
+				height='80'
+				width='80'
+				color='#646cff'
+				radius='9'
+				ariaLabel='three-dots-loading'
+				wrapperStyle={{}}
+				wrapperClass=''
+			/>
+		</div>
+	);
+};
 
-export const Loader = () => (
-  <LoaderWrapper>
-    <DotLoader color="#36d7b7" size={60} />
-  </LoaderWrapper>
-);
+export default Loader;
