@@ -4,12 +4,12 @@ import { Toaster } from 'react-hot-toast';
 import './App.css';
 import fetchGalleryPhotos from './api/photos-api';
 
-import SearchBar from './component/SearchBar/SearchBar';
-import ImageGallery from './component/ImageGallery/ImageGallery';
-import Loader from './component/Loader/Loader';
-import ErrorMessage from './component/ErrorMessage/ErrorMassage';
-import LoadMoreBtn from './component/LoadMoreBtn/LoadMoreBtn';
-import ImageModal from './component/ImageModal/ImageModal';
+import SearchBar from './components/SearchBar/SearchBar';
+import ImageGallery from './components/ImageGallery/ImageGallery';
+import Loader from './components/Loader/Loader';
+import ErrorMessage from './components/ErrorMessage/ErrorMassage';
+import LoadMoreBtn from './components/LoadMoreBtn/LoadMoreBtn';
+import ImageModal from './components/ImageModal/ImageModal';
 
 function App() {
 	const [page, setPage] = useState(1);
